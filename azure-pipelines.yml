@@ -1,0 +1,53 @@
+trigger:
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- task: PowerShell@2
+  inputs:
+    targetType: 'inline'
+    script: |
+      Install-Module -Name MicrosoftPowerBIMgmt -Force -AllowClobber
+
+- task: PowerShell@2
+  inputs:
+    targetType: 'inline'
+    script: |
+      # Variables
+      $tenantId = "your-tenant-id"
+      $clientId = "your-client-id"
+      $clientSecret = "$(PowerBIClientSecret)"  # Securely store the secret in pipeline variables
+      $workspaceId = "17e6dcd9-6633-40e1-bb3a-274e5f1520d9"
+      $filePath = "$(Pipeline.Workspace)/eramus_report.pbix"
+
+      # Authenticate with Azure AD
+      $body = @{
+        grant_type    = "client_credentials"
+        client_id     = $clientId
+        client_secret = $clientSecret
+        resource      = "https://analysis.windows.net/powerbi/api"
+      }
+      
+      $tokenResponse = Invoke-RestMethod -Uri "https://login.microsoftonline.com/$tenantId/oauth2/token" -Method Post -ContentType "application/x-www-form-urlencoded" -Body $body
+      $accessToken = $tokenResponse.access_token
+
+      # Upload the .pbix file
+      $headers = @{
+        Authorization = "Bearer $accessToken"
+        ContentType   = "multipart/form-data"
+      }
+      
+      $uri = "https://api.powerbi.com/v1.0/myorg/groups/$workspaceId/imports?datasetDisplayName=eramus_report"
+
+      $params = @{
+        Uri         = $uri
+        Method      = "Post"
+        Headers     = $headers
+        InFile      = $filePath
+        ContentType = "application/octet-stream"
+      }
+
+      Invoke-RestMethod @params
+  displayName: 'Publish Power BI Report'
