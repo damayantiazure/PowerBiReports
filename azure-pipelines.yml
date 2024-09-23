@@ -61,3 +61,10 @@ steps:
         Method      = "Post"
         Headers     = $headers
       }
+      try {
+        $response = Invoke-RestMethod @params
+        Write-Host "File uploaded successfully. Response: $($response | ConvertTo-Json -Depth 10)"
+      } catch {
+        Write-Error "Failed to upload file: $_"
+        throw $_
+      }
