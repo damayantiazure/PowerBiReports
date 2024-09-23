@@ -28,6 +28,12 @@ steps:
       Write-Host "Workspace ID: $workspaceId"
       Write-Host "File Path: $filePath"
 
+      # Check if the file exists
+      if (-Not (Test-Path -Path $filePath)) {
+        Write-Error "File not found: $filePath"
+        exit 1
+      }
+
       # Authenticate with Azure AD
       $body = @{
         grant_type    = "client_credentials"
