@@ -66,6 +66,8 @@ steps:
         Uri         = $uri
         Method      = "Post"
         Headers     = $headers
+        InFile      = $filePath
+        ContentType = "application/octet-stream"
       }
       try {
         $response = Invoke-RestMethod @params
