@@ -19,8 +19,14 @@ steps:
       $tenantId = $tenantId
       $clientId = $clientId
       $clientSecret = $clientSecret  # Securely store the secret in pipeline variables
-      $workspaceId = $workspaceId
+      $workspaceId = "17e6dcd9-6633-40e1-bb3a-274e5f1520d9"
       $filePath = "$(Pipeline.Workspace)/eramus_report.pbix"
+
+      # Log variables for debugging
+      Write-Host "Tenant ID: $tenantId"
+      Write-Host "Client ID: $clientId"
+      Write-Host "Workspace ID: $workspaceId"
+      Write-Host "File Path: $filePath"
 
       # Authenticate with Azure AD
       $body = @{
@@ -30,24 +36,28 @@ steps:
         resource      = "https://analysis.windows.net/powerbi/api"
       }
       
-      $tokenResponse = Invoke-RestMethod -Uri "https://login.microsoftonline.com/$tenantId/oauth2/token" -Method Post -ContentType "application/x-www-form-urlencoded" -Body $body
-      $accessToken = $tokenResponse.access_token
+      $tokenUrl = "https://login.microsoftonline.com/$tenantId/oauth2/token"
+      Write-Host "Token URL: $tokenUrl"
 
-      # Upload the .pbix file
+      try {
+        $tokenResponse = Invoke-RestMethod -Uri $tokenUrl -Method Post -ContentType "application/x-www-form-urlencoded" -Body $body
+        $accessToken = $tokenResponse.access_token
+        Write-Host "Access Token: $accessToken"
+      } catch {
+        Write-Error "Failed to get access token: $_"
+        throw $_
+      }
+       # Upload the .pbix file
       $headers = @{
         Authorization = "Bearer $accessToken"
         ContentType   = "multipart/form-data"
       }
       
       $uri = "https://api.powerbi.com/v1.0/myorg/groups/$workspaceId/imports?datasetDisplayName=eramus_report"
+      Write-Host "Upload URI: $uri"
 
       $params = @{
         Uri         = $uri
         Method      = "Post"
         Headers     = $headers
-        InFile      = $filePath
-        ContentType = "application/octet-stream"
       }
-
-      Invoke-RestMethod @params
-  displayName: 'Publish Power BI Report'
