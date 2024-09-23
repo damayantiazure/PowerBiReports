@@ -13,8 +13,6 @@ steps:
       Install-Module -Name MicrosoftPowerBIMgmt -Force -AllowClobber
 
 
-
-steps:
 - task: PowerShell@2
   inputs:
     targetType: 'inline'
