@@ -20,11 +20,11 @@ steps:
     targetType: 'inline'
     script: |
       # Variables
-      $tenantId = "your-tenant-id"
-      $clientId = "your-client-id"
-      $clientSecret = "$(PowerBIClientSecret)"  # Securely stored as a pipeline variable
-      $workspaceId = "your-workspace-id"
-      $filePath = "$(Pipeline.Workspace)/your-report.pbix"
+      $tenantId = "835f6712-aeca-416a-8b76-d4dad8d12381"
+      $clientId = "cdd1cb32-8cea-4768-b972-5f937c78cfe8"
+      $clientSecret = "O.g8Q~xTDTFlObwGm75fqkRRIDLr8pNDp1I45crQ"  # Securely store the secret in pipeline variables
+      $workspaceId = "17e6dcd9-6633-40e1-bb3a-274e5f1520d9"
+      $filePath = "$(System.DefaultWorkingDirectory)/eramusreport.pbix"
 
       # Check if the .pbix file exists
       if (-Not (Test-Path $filePath)) {
@@ -49,7 +49,7 @@ steps:
       }
 
       # API URL for importing the .pbix file
-      $uri = "https://api.powerbi.com/v1.0/myorg/groups/$workspaceId/imports?datasetDisplayName=YourReportName"
+      $uri = "https://api.powerbi.com/v1.0/myorg/groups/$workspaceId/imports?datasetDisplayName=eramusreport"
 
       # Open the .pbix file as a byte array
       $fileContent = [System.IO.File]::ReadAllBytes($filePath)
