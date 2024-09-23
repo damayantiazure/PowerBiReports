@@ -19,7 +19,7 @@ steps:
       $tenantId = $tenantId
       $clientId = $clientId
       $clientSecret = $clientSecret  # Securely store the secret in pipeline variables
-      $workspaceId = "17e6dcd9-6633-40e1-bb3a-274e5f1520d9"
+      $workspaceId = $workspaceId
       $filePath = "$(Pipeline.Workspace)/eramus_report.pbix"
 
       # Authenticate with Azure AD
