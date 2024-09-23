@@ -1,4 +1,4 @@
-trigger: None
+trigger: none
 #- main
 
 pool:
@@ -20,7 +20,7 @@ steps:
       $clientId = "cdd1cb32-8cea-4768-b972-5f937c78cfe8"
       $clientSecret = "O.g8Q~xTDTFlObwGm75fqkRRIDLr8pNDp1I45crQ"  # Securely store the secret in pipeline variables
       $workspaceId = "17e6dcd9-6633-40e1-bb3a-274e5f1520d9"
-      $filePath = "$(System.DefaultWorkingDirectory)/eramus_report.pbix"
+      $filePath = "$(System.DefaultWorkingDirectory)/eramusreport.pbix"
 
       # Log variables for debugging
       Write-Host "Tenant ID: $tenantId"
@@ -59,7 +59,7 @@ steps:
         ContentType   = "multipart/form-data"
       }
       
-      $uri = "https://api.powerbi.com/v1.0/myorg/groups/$workspaceId/imports?datasetDisplayName=eramus_report"
+      $uri = "https://api.powerbi.com/v1.0/myorg/groups/$workspaceId/imports?datasetDisplayName=eramusreport"
       Write-Host "Upload URI: $uri"
 
       $params = @{
