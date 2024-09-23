@@ -14,7 +14,7 @@ steps:
       Install-Module -Name MicrosoftPowerBIMgmt -Force -AllowClobber
 - task: PublishPipelineArtifact@1
   inputs:
-    targetPath: '$(System.DefaultWorkingDirectory)/eramus_report.pbix'  # Replace with the actual path to your .pbix file
+    targetPath: '$(System.DefaultWorkingDirectory)/eramusreport.pbix'  # Replace with the actual path to your .pbix file
     artifact: 'pbixArtifact'
     publishLocation: 'pipeline'      
 - task: DownloadPipelineArtifact@2
