@@ -1,4 +1,5 @@
 
+
 trigger: none
 #- main
 
@@ -11,6 +12,15 @@ steps:
     targetType: 'inline'
     script: |
       Install-Module -Name MicrosoftPowerBIMgmt -Force -AllowClobber
+- task: PublishPipelineArtifact@1
+  inputs:
+    targetPath: '$(System.DefaultWorkingDirectory)/eramus_report.pbix'  # Replace with the actual path to your .pbix file
+    artifact: 'pbixArtifact'
+    publishLocation: 'pipeline'      
+- task: DownloadPipelineArtifact@2
+  inputs:
+    artifact: 'pbixArtifact'
+    targetPath: '$(Pipeline.Workspace)'   
 
 
 - task: PowerShell@2
@@ -22,7 +32,7 @@ steps:
       $clientId = "cdd1cb32-8cea-4768-b972-5f937c78cfe8"
       $clientSecret = "O.g8Q~xTDTFlObwGm75fqkRRIDLr8pNDp1I45crQ"  # Securely store the secret in pipeline variables
       $workspaceId = "17e6dcd9-6633-40e1-bb3a-274e5f1520d9"
-      $filePath = "$(System.DefaultWorkingDirectory)/eramusreport.pbix"
+      $filePath = "$(Pipeline.Workspace)/eramus_report.pbix"
 
       # Check if the .pbix file exists
       if (-Not (Test-Path $filePath)) {
