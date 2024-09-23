@@ -16,9 +16,9 @@ steps:
     targetType: 'inline'
     script: |
       # Variables
-      $tenantId = "your-tenant-id"
-      $clientId = "your-client-id"
-      $clientSecret = "$(PowerBIClientSecret)"  # Securely store the secret in pipeline variables
+      $tenantId = $tenantId
+      $clientId = $clientId
+      $clientSecret = $clientId  # Securely store the secret in pipeline variables
       $workspaceId = "17e6dcd9-6633-40e1-bb3a-274e5f1520d9"
       $filePath = "$(Pipeline.Workspace)/eramus_report.pbix"
 
