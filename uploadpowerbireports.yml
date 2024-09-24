@@ -1,16 +1,15 @@
-trigger: none
-#- main
+trigger:
+- main
 
 pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-  tenantId: '835f6712-aeca-416a-8b76-d4dad8d12381'  # Replace with your actual Azure AD tenant ID
+  tenantId: '835f6712-aeca-416a-8b76-d4dad8d12381'  # Replace with your actual AD tenant ID
   clientId: 'cdd1cb32-8cea-4768-b972-5f937c78cfe8'  # Replace with your actual client ID
   clientSecret: 'O.g8Q~xTDTFlObwGm75fqkRRIDLr8pNDp1I45crQ'  # Store this as a secret variable in Azure DevOps
   workspaceName: 'Erasmus_DevOps'  # Replace with your actual Power BI workspace name
-  # pbixFileName: 'COVIDBakeoff.pbix'  # Replace with the actual name of your .pbix file
-  pbixFolder: '$(System.DefaultWorkingDirectory)/Reports'
+  pbixFolder: 'Reports'  # Replace with the actual path to your folder containing .pbix files
 
 steps:
 - task: PowerShell@2
@@ -19,6 +18,16 @@ steps:
     script: |
       Install-Module -Name MicrosoftPowerBIMgmt -Force -AllowClobber
 
+- task: PublishPipelineArtifact@1
+  inputs:
+    targetPath: '$(System.DefaultWorkingDirectory)/$(pbixFolder)'  # Replace with the actual path to your folder containing .pbix files
+    artifact: 'pbixArtifact'
+    publishLocation: 'pipeline'
+
+- task: DownloadPipelineArtifact@2
+  inputs:
+    artifact: 'pbixArtifact'
+    targetPath: '$(Pipeline.Workspace)'
 
 - task: PowerShell@2
   inputs:
@@ -29,7 +38,8 @@ steps:
       $clientId = "$(clientId)"
       $clientSecret = "$(clientSecret)"
       $workspaceName = "$(workspaceName)"
-      
+      $pbixFolder = "$(Pipeline.Workspace)/$(pbixFolder)"
+
       # Connect to Power BI using a service principal
       $credentials = New-Object System.Management.Automation.PSCredential ($clientId, (convertto-securestring $clientSecret -asplaintext -force))
       Connect-PowerBIServiceAccount -ServicePrincipal -Credential $credentials -Tenant $tenantId
