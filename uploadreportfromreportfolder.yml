@@ -64,7 +64,8 @@ steps:
         $filePath = $pbixFile.FullName
         Write-Output "Uploading report: $($pbixFile.Name)"
         try {
-          Import-PowerBIReport -WorkspaceId $workspaceName -Path $filePath -ConflictAction Overwrite
+          #Import-PowerBIReport -WorkspaceId $workspaceName -Path $filePath -ConflictAction Overwrite
+          New-PowerBIReport -Path $filePath -WorkspaceId $workspace.Id -ConflictAction CreateOrOverwrite
           Write-Output "Uploaded report: $($pbixFile.Name)"
         } catch {
           Write-Error "Failed to upload report: $($pbixFile.Name). Error: $_"
