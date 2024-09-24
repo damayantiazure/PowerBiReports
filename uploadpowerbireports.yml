@@ -37,8 +37,7 @@ steps:
       $tenantId = "$(tenantId)"
       $clientId = "$(clientId)"
       $clientSecret = "$(clientSecret)"
-      $workspaceName = "$(workspaceName)"
-      $pbixFolder = "$(Pipeline.Workspace)/$(pbixFolder)"
+      $workspaceName = "$(workspaceName)"      
 
       # Connect to Power BI using a service principal
       $credentials = New-Object System.Management.Automation.PSCredential ($clientId, (convertto-securestring $clientSecret -asplaintext -force))
