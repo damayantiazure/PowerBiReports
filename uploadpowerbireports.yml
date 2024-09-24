@@ -12,7 +12,7 @@ variables:
   pbixFiles: |
     COVID19USprackingSample.pbix
     COVIDBakeoff.pbix
-    Sales & Returns Sample v201912.pbix 
+    
 
 steps:
 - task: PowerShell@2
