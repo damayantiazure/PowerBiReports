@@ -10,7 +10,7 @@ variables:
   clientSecret: 'O.g8Q~xTDTFlObwGm75fqkRRIDLr8pNDp1I45crQ'  # Store this as a secret variable in Azure DevOps
   workspaceName: 'Erasmus_DevOps'  # Replace with your actual Power BI workspace name
   # pbixFileName: 'COVIDBakeoff.pbix'  # Replace with the actual name of your .pbix file
-  pbixFolder: 'Reports'
+  pbixFolder: '$(System.DefaultWorkingDirectory)/$(pbixFolder)'
 
 steps:
 - task: PowerShell@2
@@ -19,16 +19,6 @@ steps:
     script: |
       Install-Module -Name MicrosoftPowerBIMgmt -Force -AllowClobber
 
-- task: PublishPipelineArtifact@1
-  inputs:
-    targetPath: '$(System.DefaultWorkingDirectory)/$(pbixFolder)'  # Replace with the actual path to your folder containing .pbix files
-    artifact: 'pbixArtifact'
-    publishLocation: 'pipeline'
-
-- task: DownloadPipelineArtifact@2
-  inputs:
-    artifact: 'pbixArtifact'
-    targetPath: '$(Pipeline.Workspace)'
 
 - task: PowerShell@2
   inputs:
@@ -39,8 +29,7 @@ steps:
       $clientId = "$(clientId)"
       $clientSecret = "$(clientSecret)"
       $workspaceName = "$(workspaceName)"
-      $pbixFolder = "$(Pipeline.Workspace)/$(pbixFolder)"
-
+      
       # Connect to Power BI using a service principal
       $credentials = New-Object System.Management.Automation.PSCredential ($clientId, (convertto-securestring $clientSecret -asplaintext -force))
       Connect-PowerBIServiceAccount -ServicePrincipal -Credential $credentials -Tenant $tenantId
