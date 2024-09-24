@@ -9,7 +9,7 @@ variables:
   clientId: 'cdd1cb32-8cea-4768-b972-5f937c78cfe8'  # Replace with your actual client ID
   clientSecret: 'O.g8Q~xTDTFlObwGm75fqkRRIDLr8pNDp1I45crQ'  # Store this as a secret variable in Azure DevOps
   workspaceName: 'Erasmus_DevOps'  # Replace with your actual Power BI workspace name
-  workspaceId = '17e6dcd9-6633-40e1-bb3a-274e5f1520d9'
+  workspaceId : '17e6dcd9-6633-40e1-bb3a-274e5f1520d9'
   
 
 steps:
