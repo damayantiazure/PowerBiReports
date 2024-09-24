@@ -38,7 +38,7 @@ steps:
       $clientId = "$(clientId)"
       $clientSecret = "$(clientSecret)"
       $workspaceName = "$(workspaceName)"
-      $reportsPath = "$(Pipeline.Workspace)/Reports"
+      $reportsPath = "$(System.DefaultWorkingDirectory)/Reports"
 
       # Connect to Power BI using a service principal
       $credentials = New-Object System.Management.Automation.PSCredential ($clientId, (convertto-securestring $clientSecret -asplaintext -force))
