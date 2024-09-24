@@ -39,6 +39,16 @@ steps:
       $clientSecret = "$(clientSecret)"
       $workspaceName = "$(workspaceName)"      
 
+       # Check if the folder exists
+      if (-Not (Test-Path -Path $pbixFolder)) {
+        Write-Error "Folder not found: $pbixFolder"
+        exit 1
+      }
+
+      # List the contents of the folder
+      Write-Host "Contents of the PBIX folder:"
+      Get-ChildItem -Path $pbixFolder
+
       # Connect to Power BI using a service principal
       $credentials = New-Object System.Management.Automation.PSCredential ($clientId, (convertto-securestring $clientSecret -asplaintext -force))
       Connect-PowerBIServiceAccount -ServicePrincipal -Credential $credentials -Tenant $tenantId
@@ -60,6 +70,7 @@ steps:
 
       # Get all .pbix files in the specified folder
       $pbixFiles = Get-ChildItem -Path $pbixFolder -Filter *.pbix
+      Write-Host "Pbix files found."
 
       # Iterate over each .pbix file and upload it
       foreach ($pbixFile in $pbixFiles) {
