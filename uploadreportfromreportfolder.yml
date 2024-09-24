@@ -40,6 +40,9 @@ steps:
       $clientSecret = "$(clientSecret)"
       $workspaceName = "$(workspaceName)"
       $reportsPath = "$(System.DefaultWorkingDirectory)/Reports"
+      
+      # Ensure the Power BI Management module is imported
+      Import-Module -Name MicrosoftPowerBIMgmt
 
       # Connect to Power BI using a service principal
       $credentials = New-Object System.Management.Automation.PSCredential ($clientId, (convertto-securestring $clientSecret -asplaintext -force))
