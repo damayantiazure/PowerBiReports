@@ -9,7 +9,10 @@ variables:
   clientId: 'cdd1cb32-8cea-4768-b972-5f937c78cfe8'  # Replace with your actual client ID
   clientSecret: 'O.g8Q~xTDTFlObwGm75fqkRRIDLr8pNDp1I45crQ'  # Store this as a secret variable in Azure DevOps
   workspaceName: 'Erasmus_DevOps'  # Replace with your actual Power BI workspace name
-  pbixFolder: '$(System.DefaultWorkingDirectory)/Reports'  # Replace with the actual path to your folder containing .pbix files
+  pbixFiles: |
+    COVID19USprackingSample.pbix
+    COVIDBakeoff.pbix
+    Sales & Returns Sample v201912.pbix 
 
 steps:
 - task: PowerShell@2
@@ -18,16 +21,16 @@ steps:
     script: |
       Install-Module -Name MicrosoftPowerBIMgmt -Force -AllowClobber
 
-# - task: PublishPipelineArtifact@1
-#   inputs:
-#     targetPath: '$(System.DefaultWorkingDirectory)/$(pbixFolder)'  # Replace with the actual path to your folder containing .pbix files
-#     artifact: 'pbixArtifact'
-#     publishLocation: 'pipeline'
+- task: PublishPipelineArtifact@1
+  inputs:
+    targetPath: '$(System.DefaultWorkingDirectory)/path/to/your/reports'  # Replace with the actual path to your .pbix files
+    artifact: 'pbixArtifact'
+    publishLocation: 'pipeline'
 
-# - task: DownloadPipelineArtifact@2
-#   inputs:
-#     artifact: 'pbixArtifact'
-#     targetPath: '$(Pipeline.Workspace)'
+- task: DownloadPipelineArtifact@2
+  inputs:
+    artifact: 'pbixArtifact'
+    targetPath: '$(Pipeline.Workspace)'
 
 - task: PowerShell@2
   inputs:
@@ -37,17 +40,8 @@ steps:
       $tenantId = "$(tenantId)"
       $clientId = "$(clientId)"
       $clientSecret = "$(clientSecret)"
-      $workspaceName = "$(workspaceName)"      
-
-       # Check if the folder exists
-      if (-Not (Test-Path -Path $pbixFolder)) {
-        Write-Error "Folder not found: $pbixFolder"
-        exit 1
-      }
-
-      # List the contents of the folder
-      Write-Host "Contents of the PBIX folder:"
-      Get-ChildItem -Path $pbixFolder
+      $workspaceName = "$(workspaceName)"
+      $pbixFiles = "$(pbixFiles)".Split("`n") | ForEach-Object { $_.Trim() }
 
       # Connect to Power BI using a service principal
       $credentials = New-Object System.Management.Automation.PSCredential ($clientId, (convertto-securestring $clientSecret -asplaintext -force))
@@ -68,13 +62,9 @@ steps:
         exit 1
       }
 
-      # Get all .pbix files in the specified folder
-      $pbixFiles = Get-ChildItem -Path $pbixFolder -Filter *.pbix
-      Write-Host "Pbix files found."
-
       # Iterate over each .pbix file and upload it
       foreach ($pbixFile in $pbixFiles) {
-        $pbixFilePath = $pbixFile.FullName
+        $pbixFilePath = "$(Pipeline.Workspace)/$pbixFile"
         # Check if the file exists
         if (-Not (Test-Path -Path $pbixFilePath)) {
           Write-Error "File not found: $pbixFilePath"
@@ -84,9 +74,9 @@ steps:
         # Upload the report
         try {
           New-PowerBIReport -Path $pbixFilePath -WorkspaceId $workspace.Id -ConflictAction CreateOrOverwrite
-          Write-Host "Uploaded report: $($pbixFile.Name)"
+          Write-Host "Uploaded report: $pbixFile"
         } catch {
-          Write-Error "Failed to upload report: $($pbixFile.Name). Error: $_"
+          Write-Error "Failed to upload report: $pbixFile. Error: $_"
           exit 1
         }
       }
