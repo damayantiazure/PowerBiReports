@@ -9,10 +9,7 @@ variables:
   clientId: 'cdd1cb32-8cea-4768-b972-5f937c78cfe8'  # Replace with your actual client ID
   clientSecret: 'O.g8Q~xTDTFlObwGm75fqkRRIDLr8pNDp1I45crQ'  # Store this as a secret variable in Azure DevOps
   workspaceName: 'Erasmus_DevOps'  # Replace with your actual Power BI workspace name
-  pbixFiles: |
-    COVID19USprackingSample.pbix
-    COVIDBakeoff.pbix
-    
+  
 
 steps:
 - task: PowerShell@2
@@ -41,7 +38,7 @@ steps:
       $clientId = "$(clientId)"
       $clientSecret = "$(clientSecret)"
       $workspaceName = "$(workspaceName)"
-      $pbixFiles = "$(pbixFiles)".Split("`n") | ForEach-Object { $_.Trim() }
+      $reportsPath = "$(Pipeline.Workspace)/Reports"
 
       # Connect to Power BI using a service principal
       $credentials = New-Object System.Management.Automation.PSCredential ($clientId, (convertto-securestring $clientSecret -asplaintext -force))
@@ -49,34 +46,24 @@ steps:
 
       # Log the connection status
       if ($?) {
-        Write-Host "Connected to Power BI Service Account successfully."
+        Write-Output "Connected to Power BI Service Account successfully."
       } else {
         Write-Error "Failed to connect to Power BI Service Account."
         exit 1
       }
 
-      # Get the workspace
-      $workspace = Get-PowerBIWorkspace -Name $workspaceName
-      if (-not $workspace) {
-        Write-Error "Workspace not found: $workspaceName"
-        exit 1
-      }
+      # Get all .pbix files in the Reports directory
+      $pbixFiles = Get-ChildItem -Path $reportsPath -Filter *.pbix
 
-      # Iterate over each .pbix file and upload it
+      # Upload PBIX files
       foreach ($pbixFile in $pbixFiles) {
-        $pbixFilePath = "$(Pipeline.Workspace)/$pbixFile"
-        # Check if the file exists
-        if (-Not (Test-Path -Path $pbixFilePath)) {
-          Write-Error "File not found: $pbixFilePath"
-          exit 1
-        }
-
-        # Upload the report
+        $filePath = $pbixFile.FullName
+        Write-Output "Uploading report: $($pbixFile.Name)"
         try {
-          New-PowerBIReport -Path $pbixFilePath -WorkspaceId $workspace.Id -ConflictAction CreateOrOverwrite
-          Write-Host "Uploaded report: $pbixFile"
+          Import-PowerBIReport -WorkspaceId $workspaceName -Path $filePath -ConflictAction Overwrite
+          Write-Output "Uploaded report: $($pbixFile.Name)"
         } catch {
-          Write-Error "Failed to upload report: $pbixFile. Error: $_"
+          Write-Error "Failed to upload report: $($pbixFile.Name). Error: $_"
           exit 1
         }
       }
