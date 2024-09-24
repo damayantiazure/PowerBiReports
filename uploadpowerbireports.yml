@@ -9,7 +9,8 @@ variables:
   clientId: 'cdd1cb32-8cea-4768-b972-5f937c78cfe8'  # Replace with your actual client ID
   clientSecret: 'O.g8Q~xTDTFlObwGm75fqkRRIDLr8pNDp1I45crQ'  # Store this as a secret variable in Azure DevOps
   workspaceName: 'Erasmus_DevOps'  # Replace with your actual Power BI workspace name
-  pbixFileName: 'COVIDBakeoff.pbix'  # Replace with the actual name of your .pbix file
+  # pbixFileName: 'COVIDBakeoff.pbix'  # Replace with the actual name of your .pbix file
+  pbixFolder: '$(System.DefaultWorkingDirectory)/Reports'
 
 steps:
 - task: PowerShell@2
@@ -20,7 +21,7 @@ steps:
 
 - task: PublishPipelineArtifact@1
   inputs:
-    targetPath: '$(System.DefaultWorkingDirectory)/$(pbixFileName)'  # Replace with the actual path to your .pbix file
+    targetPath: '$(System.DefaultWorkingDirectory)/$(pbixFolder)'  # Replace with the actual path to your folder containing .pbix files
     artifact: 'pbixArtifact'
     publishLocation: 'pipeline'
 
@@ -33,20 +34,16 @@ steps:
   inputs:
     targetType: 'inline'
     script: |
-      $pbixFilePath = "$(Pipeline.Workspace)/$(pbixFileName)"
-      # Check if the file exists
-      if (-Not (Test-Path -Path $pbixFilePath)) {
-        Write-Error "File not found: $pbixFilePath"
-        exit 1
-      }
+      # Variables
+      $tenantId = "$(tenantId)"
+      $clientId = "$(clientId)"
+      $clientSecret = "$(clientSecret)"
+      $workspaceName = "$(workspaceName)"
+      $pbixFolder = "$(Pipeline.Workspace)/$(pbixFolder)"
 
       # Connect to Power BI using a service principal
-      $DeploymentPrincipalAppId = "$(clientId)"
-      $DeploymentPrincipalAppSecret = "$(clientSecret)"
-      $tenantID = "$(tenantId)"
-
-      $credentials = New-Object System.Management.Automation.PSCredential ($DeploymentPrincipalAppId, (convertto-securestring $DeploymentPrincipalAppSecret -asplaintext -force))
-      Connect-PowerBIServiceAccount -ServicePrincipal -Credential $credentials -Tenant $tenantID
+      $credentials = New-Object System.Management.Automation.PSCredential ($clientId, (convertto-securestring $clientSecret -asplaintext -force))
+      Connect-PowerBIServiceAccount -ServicePrincipal -Credential $credentials -Tenant $tenantId
 
       # Log the connection status
       if ($?) {
@@ -56,12 +53,31 @@ steps:
         exit 1
       }
 
-      # Get the workspace and upload the report
-      $workspace = Get-PowerBIWorkspace -Name '$(workspaceName)' 
-      if ($workspace) {
-        Write-Host "Workspace found: $($workspace.Name)"
-        New-PowerBIReport -Path $pbixFilePath -WorkspaceId $workspace.Id -ConflictAction CreateOrOverwrite
-      } else {
-        Write-Error "Workspace not found: $(workspaceName)"
+      # Get the workspace
+      $workspace = Get-PowerBIWorkspace -Name $workspaceName
+      if (-not $workspace) {
+        Write-Error "Workspace not found: $workspaceName"
         exit 1
+      }
+
+      # Get all .pbix files in the specified folder
+      $pbixFiles = Get-ChildItem -Path $pbixFolder -Filter *.pbix
+
+      # Iterate over each .pbix file and upload it
+      foreach ($pbixFile in $pbixFiles) {
+        $pbixFilePath = $pbixFile.FullName
+        # Check if the file exists
+        if (-Not (Test-Path -Path $pbixFilePath)) {
+          Write-Error "File not found: $pbixFilePath"
+          exit 1
+        }
+
+        # Upload the report
+        try {
+          New-PowerBIReport -Path $pbixFilePath -WorkspaceId $workspace.Id -ConflictAction CreateOrOverwrite
+          Write-Host "Uploaded report: $($pbixFile.Name)"
+        } catch {
+          Write-Error "Failed to upload report: $($pbixFile.Name). Error: $_"
+          exit 1
+        }
       }
