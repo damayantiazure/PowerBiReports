@@ -1,0 +1,82 @@
+trigger:
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  tenantId: '835f6712-aeca-416a-8b76-d4dad8d12381'  # Replace with your actual AD tenant ID
+  clientId: 'cdd1cb32-8cea-4768-b972-5f937c78cfe8'  # Replace with your actual client ID
+  clientSecret: 'O.g8Q~xTDTFlObwGm75fqkRRIDLr8pNDp1I45crQ'  # Store this as a secret variable in Azure DevOps
+  workspaceName: 'Erasmus_DevOps'  # Replace with your actual Power BI workspace name
+  pbixFiles: |
+    COVID19USprackingSample.pbix
+    COVIDBakeoff.pbix
+    
+
+steps:
+- task: PowerShell@2
+  inputs:
+    targetType: 'inline'
+    script: |
+      Install-Module -Name MicrosoftPowerBIMgmt -Force -AllowClobber
+
+- task: PublishPipelineArtifact@1
+  inputs:
+    targetPath: '$(System.DefaultWorkingDirectory)/Reports'  # Replace with the actual path to your .pbix files
+    artifact: 'pbixArtifact'
+    publishLocation: 'pipeline'
+
+- task: DownloadPipelineArtifact@2
+  inputs:
+    artifact: 'pbixArtifact'
+    targetPath: '$(Pipeline.Workspace)'
+
+- task: PowerShell@2
+  inputs:
+    targetType: 'inline'
+    script: |
+      # Variables
+      $tenantId = "$(tenantId)"
+      $clientId = "$(clientId)"
+      $clientSecret = "$(clientSecret)"
+      $workspaceName = "$(workspaceName)"
+      $pbixFiles = "$(pbixFiles)".Split("`n") | ForEach-Object { $_.Trim() }
+
+      # Connect to Power BI using a service principal
+      $credentials = New-Object System.Management.Automation.PSCredential ($clientId, (convertto-securestring $clientSecret -asplaintext -force))
+      Connect-PowerBIServiceAccount -ServicePrincipal -Credential $credentials -Tenant $tenantId
+
+      # Log the connection status
+      if ($?) {
+        Write-Host "Connected to Power BI Service Account successfully."
+      } else {
+        Write-Error "Failed to connect to Power BI Service Account."
+        exit 1
+      }
+
+      # Get the workspace
+      $workspace = Get-PowerBIWorkspace -Name $workspaceName
+      if (-not $workspace) {
+        Write-Error "Workspace not found: $workspaceName"
+        exit 1
+      }
+
+      # Iterate over each .pbix file and upload it
+      foreach ($pbixFile in $pbixFiles) {
+        $pbixFilePath = "$(Pipeline.Workspace)/$pbixFile"
+        # Check if the file exists
+        if (-Not (Test-Path -Path $pbixFilePath)) {
+          Write-Error "File not found: $pbixFilePath"
+          exit 1
+        }
+
+        # Upload the report
+        try {
+          New-PowerBIReport -Path $pbixFilePath -WorkspaceId $workspace.Id -ConflictAction CreateOrOverwrite
+          Write-Host "Uploaded report: $pbixFile"
+        } catch {
+          Write-Error "Failed to upload report: $pbixFile. Error: $_"
+          exit 1
+        }
+      }
