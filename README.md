@@ -1,20 +1,45 @@
 # Introduction 
-TODO: Give a short introduction of your project. Let this section explain the objectives or the motivation behind this project. 
+Deploying Power BI reports using Azure DevOps involves creating a pipeline that automates the process of publishing the reports to a Power BI workspace. Here's a step-by-step guide for setting up a DevOps pipeline for deploying Power BI reports:
 
-# Getting Started
-TODO: Guide users through getting your code up and running on their own system. In this section you can talk about:
-1.	Installation process
-2.	Software dependencies
-3.	Latest releases
-4.	API references
+# Prerequisites
+1. Power BI Service Account: This account should have appropriate permissions in the target Power BI workspace (e.g., Admin or Member).
+2. Azure DevOps Account: You need an Azure DevOps organization and project.
+3. Power BI Service Principal or App Registration: Create an Azure AD app registration and configure it with necessary API permissions to the Power BI Service. Create a secret for the app
+4. Create a Keyvalut in azure and under Access Control-> Role assignment -> add the service principal -> roles : Keyvault Secret Officer
+5. Store the secret in a secure store/ Azure Keyvault6.
+6. Create a Service connection in Azure Devops, the service connetion will be used in the pipeline to securely retrieve the app Secreat from teh KeyVault
+7. Power BI Workspace: The workspace where the reports will be deployed.
+8. Power BI Rest API: Familiarity with Power BI Rest API, which is used to automate report deployments.
 
-# Build and Test
-TODO: Describe and show how to build your code and run the tests. 
+# Step 1: Create a Service Principal in Azure AD
+1. Go to Azure Active Directory and create a new App Registration.
+2. Configure the API permissions:
+3. Add Power BI Service permissions (Tenant.Read.All, Tenant.ReadWrite.All).
+4. Add Delegated permissions as needed.
+5. Assign admin consent for the permissions.
 
-# Contribute
-TODO: Explain how other users and developers can contribute to make your code better. 
+# Step 2: Add the Service Principal to Power BI Workspace
+1. Go to the Power BI Service.
+2. Navigate to the target workspace.
+3. Add the service principal as a member or admin of the workspace.
 
-If you want to learn more about creating good readme files then refer the following [guidelines](https://docs.microsoft.com/en-us/azure/devops/repos/git/create-a-readme?view=azure-devops). You can also seek inspiration from the below readme files:
-- [ASP.NET Core](https://github.com/aspnet/Home)
-- [Visual Studio Code](https://github.com/Microsoft/vscode)
-- [Chakra Core](https://github.com/Microsoft/ChakraCore)
+# Step 3: Prepare the PBIX File in Source Control 
+1. Store the .pbix file in a repository in Azure DevOps (Git or TFVC).
+2. Ensure that the repository is connected to your project in Azure DevOps.
+
+# Step 4: Create a Release Pipeline in Azure DevOps
+1. Navigate to the Pipelines section in Azure DevOps and select Create Pipeline.
+2. Choose your repository where the .pbix file is stored.
+3. Select Starter Pipeline or define a pipeline in YAML.
+   (Refer the YML Pipeline in the repo.)
+4. Rename your service connection or use teh same name
+   
+
+# Step 5: Automate and Test
+1. Test the pipeline by triggering it manually.
+2. Verify that the Power BI report is updated in the target workspace.
+
+# Important Considerations
+1. Automation Authentication: Make sure the service principal has appropriate permissions in both Azure and Power BI Service.
+2. File Path Management: Use the correct path to the .pbix file from the build artifact.
+3. Error Handling: Implement logging and error handling to capture any issues during deployment.
