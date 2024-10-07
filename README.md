@@ -32,8 +32,15 @@ Deploying Power BI reports using Azure DevOps involves creating a pipeline that 
 2. Choose your repository where the .pbix file is stored.
 3. Select Starter Pipeline or define a pipeline in YAML.
    (Refer the YML Pipeline in the repo.)
-4. Rename your service connection or use teh same name
-   
+4. Under Variables: add your Tenant, Powerbiworkspace name, ID, App REgistration ID etc
+   ![image](https://github.com/user-attachments/assets/2474290a-5863-4d51-a645-d4ce9a3b79c8)
+
+6. Rename your service connection in teh Azure Key Vault task or use the same name
+
+![image](https://github.com/user-attachments/assets/d6595d3a-d8f4-4bc6-b6cb-189815bb8cc4)
+
+7. Update the report folder path from the repo:
+![image](https://github.com/user-attachments/assets/79f9f777-bebc-4c47-b8e2-d392c9b83972)   
 
 # Step 5: Automate and Test
 1. Test the pipeline by triggering it manually.
